@@ -98,6 +98,27 @@ reset_copy
 add_avro_field '{"name": "organiserId", "type": ["null", "string"], "default": null, "doc": "Id of the organiser, if known."}'
 expect_success "avro-field-with-default"
 
+# 6. Versioning: a release tag on a clean tree gives the release version, but uncommitted work on
+#    that same tag must give a -SNAPSHOT (0.1.1), so a dirty build never overwrites a release in
+#    mavenLocal. Uses a fake tag v9.9.9 on the copy's HEAD.
+reset_copy
+git -C "$COPY" tag v9.9.9
+project_version() { "$COPY/gradlew" -p "$COPY" -q properties | sed -n 's/^version: //p'; }
+expect_version() { # $1 = case name, $2 = expected version
+  local actual
+  actual="$(project_version)"
+  if [ "$actual" = "$2" ]; then
+    echo "OK    $1: version is $2"
+    PASS=$((PASS + 1))
+  else
+    echo "FAIL  $1: expected version $2, got '$actual'"
+    FAIL=$((FAIL + 1))
+  fi
+}
+expect_version "version-clean-on-tag" "9.9.9"
+echo "uncommitted" >"$COPY/dirty.txt"
+expect_version "version-dirty-on-tag" "9.9.10-SNAPSHOT"
+
 echo
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

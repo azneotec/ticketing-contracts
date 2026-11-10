@@ -58,7 +58,7 @@ Avro only instantiates classes from trusted packages (a defence against deserial
 ```
 
 ## Versioning and releasing
-Same scheme as `ticketing-build-conventions` (`gradle/version.gradle.kts`): exactly on tag `vX.Y.Z` → `X.Y.Z`; after it → `X.Y.(Z+1)-SNAPSHOT`; no tag → `0.1.0-SNAPSHOT`. Semantic versioning: a new contract or field → minor; a breaking change only in a new package version (`v2`), released as a major.
+Same scheme as `ticketing-build-conventions` (`gradle/version.gradle.kts`): exactly on tag `vX.Y.Z` with a clean tree → `X.Y.Z`; after it, **or on it with uncommitted changes** → `X.Y.(Z+1)-SNAPSHOT`; no tag → `0.1.0-SNAPSHOT`. Semantic versioning: a new contract or field → minor; a breaking change only in a new package version (`v2`), released as a major.
 
 To release:
 1. `master` is clean; `./gradlew build` and `samples/verify-failure-cases.sh` pass.
@@ -68,7 +68,7 @@ To release:
 
 From then on, the checks compare against the new tag.
 
-Note: on a commit that is exactly a release tag, the version is the release version even with uncommitted changes. Commit before running `publishToMavenLocal`, or you overwrite the release in `~/.m2`.
+A dirty working tree (anything in `git status --porcelain`) is always a `-SNAPSHOT`, even on a release tag, so a local build can never overwrite a release in `~/.m2` (since 0.1.1; proven by `samples/verify-failure-cases.sh`).
 
 ## Requirements
 JDK 25, Buf. The Gradle wrapper downloads Gradle 9.9.0. Commits follow [Conventional Commits](https://www.conventionalcommits.org/); trunk-based on `master`.
