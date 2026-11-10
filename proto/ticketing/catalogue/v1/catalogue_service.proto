@@ -1,0 +1,83 @@
+// Catalogue service, version 1: read access to events for other services.
+// gRPC is internal only (ADR-010); clients use REST through the gateway/BFF.
+//
+// Evolution rules (checked by `buf breaking` against the last release tag):
+// - A field is identified on the wire by its NUMBER, not its name. Never change or reuse a number.
+// - To remove a field, delete it and add `reserved <number>;` and `reserved "<name>";`,
+//   so nobody reuses the number (old data would be misread) or the name (JSON/text format).
+// - Adding fields with new numbers is safe: old readers skip unknown fields.
+// - A change that cannot be made compatibly goes into a new package, ticketing.catalogue.v2.
+syntax = "proto3";
+
+package ticketing.catalogue.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "CatalogueServiceProto";
+option java_package = "io.github.azneotec.ticketing.catalogue.grpc.v1";
+
+// Read-only queries on the event catalogue.
+service CatalogueService {
+  // Returns one event by id. NOT_FOUND if it does not exist.
+  rpc GetEvent(GetEventRequest) returns (GetEventResponse);
+  // Returns events one page at a time, ordered by start time.
+  rpc ListEvents(ListEventsRequest) returns (ListEventsResponse);
+}
+
+message GetEventRequest {
+  // Id of the event to return.
+  string event_id = 1;
+}
+
+message GetEventResponse {
+  Event event = 1;
+}
+
+message ListEventsRequest {
+  // Maximum number of events to return. 0 means the server default; the server may cap it.
+  int32 page_size = 1;
+  // Opaque token from a previous ListEventsResponse.next_page_token; empty for the first page.
+  string page_token = 2;
+}
+
+message ListEventsResponse {
+  repeated Event events = 1;
+  // Pass to ListEventsRequest.page_token to get the next page; empty when there are no more.
+  string next_page_token = 2;
+}
+
+// An event that can be booked, e.g. one concert night.
+message Event {
+  string event_id = 1;
+  string title = 2;
+  VenueSummary venue = 3;
+  Schedule schedule = 4;
+  EventStatus status = 5;
+}
+
+// The parts of a venue other services need; the full venue lives in the Catalogue.
+message VenueSummary {
+  string venue_id = 1;
+  string name = 2;
+  string city = 3;
+}
+
+// When an event happens. Instants are stored in UTC; zone_id says where, so the local
+// wall-clock time ("doors 19:00 in London") can always be rebuilt, including DST changes.
+message Schedule {
+  google.protobuf.Timestamp starts_at = 1;
+  google.protobuf.Timestamp ends_at = 2;
+  // IANA time zone id of the venue, e.g. "Europe/London".
+  string zone_id = 3;
+}
+
+// Lifecycle of an event in the catalogue.
+enum EventStatus {
+  // Proto3 enums must start at 0, and 0 is what a reader sees when the field was never set
+  // or holds a value it does not know, so 0 means "unknown", never a real status.
+  EVENT_STATUS_UNSPECIFIED = 0;
+  EVENT_STATUS_DRAFT = 1;
+  EVENT_STATUS_PUBLISHED = 2;
+  EVENT_STATUS_CANCELLED = 3;
+}

@@ -1,0 +1,47 @@
+{
+  "type": "record",
+  "name": "EventPublished",
+  "namespace": "io.github.azneotec.ticketing.catalogue.v1",
+  "doc": "Emitted by the Catalogue when an event is published and can be booked. Key: eventId.",
+  "fields": [
+    {
+      "name": "eventId",
+      "type": "string",
+      "doc": "Id of the published event."
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "doc": "Display title, e.g. the artist and tour name."
+    },
+    {
+      "name": "venueId",
+      "type": "string",
+      "doc": "Id of the venue in the Catalogue."
+    },
+    {
+      "name": "startsAt",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      },
+      "doc": "Start time as an instant: milliseconds since the Unix epoch, UTC."
+    },
+    {
+      "name": "zoneId",
+      "type": "string",
+      "doc": "IANA time zone of the venue, e.g. Europe/London; with startsAt it gives the local start time."
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "EventStatus",
+        "doc": "Lifecycle status of the event. Readers map symbols they do not know to UNKNOWN.",
+        "symbols": ["UNKNOWN", "PUBLISHED", "CANCELLED"],
+        "default": "UNKNOWN"
+      },
+      "doc": "Status of the event when this message was written."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+# Buf configuration (https://buf.build/docs/configuration/v2/buf-yaml).
+# buf lint     -> style and naming rules (STANDARD set).
+# buf breaking -> compares proto/ with the last release tag and fails on incompatible changes.
+version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    # FILE is the strictest set: it also protects generated-code compatibility
+    # (e.g. moving a message to another file breaks Java imports, not just the wire).
+    - FILE

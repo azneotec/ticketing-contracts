@@ -1,0 +1,4 @@
+# Line endings: LF everywhere, except Windows batch files, which need CRLF.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jar binary
